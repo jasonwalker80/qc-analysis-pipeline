@@ -119,19 +119,6 @@ workflow WholeGenomeSingleSampleQc {
       preemptible_tries = preemptible_tries
   }
 
-  # QC the sample raw WGS metrics (common thresholds)
-  call QC.CollectRawWgsMetrics as CollectRawWgsMetrics {
-    input:
-      input_bam = input_bam,
-      input_bam_index = input_bam_index,
-      metrics_filename = base_name + ".raw_wgs_metrics",
-      ref_fasta = ref_fasta,
-      ref_fasta_index = ref_fasta_index,
-      wgs_coverage_interval_list = wgs_coverage_interval_list,
-      read_length = read_length,
-      preemptible_tries = preemptible_tries
-  }
-
   # Estimate level of cross-sample contamination
   call QC.CheckContamination as CheckContamination {
     input:
@@ -192,6 +179,5 @@ workflow WholeGenomeSingleSampleQc {
     File quality_yield_metrics = CollectQualityYieldMetrics.quality_yield_metrics
 
     File wgs_metrics = CollectWgsMetrics.metrics
-    File raw_wgs_metrics = CollectRawWgsMetrics.metrics
   }
 }

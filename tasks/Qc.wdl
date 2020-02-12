@@ -243,50 +243,6 @@ task CollectWgsMetrics {
   }
 }
 
-# Collect raw WGS metrics (commonly used QC thresholds)
-task CollectRawWgsMetrics {
-  input {
-    File input_bam
-    File input_bam_index
-    String metrics_filename
-    File wgs_coverage_interval_list
-    File ref_fasta
-    File ref_fasta_index
-    Int read_length
-    Int preemptible_tries
-    Int memory_multiplier = 1
-  }
-
-  Float ref_size = size(ref_fasta, "GiB") + size(ref_fasta_index, "GiB")
-  Int disk_size = ceil(size(input_bam, "GiB") + ref_size) + 20
-
-  Int memory_size = ceil((if (disk_size < 110) then 5 else 7) * memory_multiplier)
-  String java_memory_size = (memory_size - 1) * 1000
-
-  command {
-    java -Xms~{java_memory_size}m -jar /usr/picard/picard.jar \
-      CollectRawWgsMetrics \
-      INPUT=~{input_bam} \
-      VALIDATION_STRINGENCY=SILENT \
-      REFERENCE_SEQUENCE=~{ref_fasta} \
-      INCLUDE_BQ_HISTOGRAM=true \
-      INTERVALS=~{wgs_coverage_interval_list} \
-      OUTPUT=~{metrics_filename} \
-      USE_FAST_ALGORITHM=true \
-      READ_LENGTH=~{read_length}
-  }
-  runtime {
-    # Using older image due to: https://github.com/broadinstitute/picard/issues/1402
-    docker: "us.gcr.io/broad-gotc-prod/picard-cloud:2.20.4"
-    preemptible: preemptible_tries
-    memory: "~{memory_size} GiB"
-    disks: "local-disk " + disk_size + " HDD"
-  }
-  output {
-    File metrics = "~{metrics_filename}"
-  }
-}
-
 task CollectHsMetrics {
   input {
     File input_bam
