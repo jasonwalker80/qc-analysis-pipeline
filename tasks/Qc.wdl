@@ -53,6 +53,7 @@ task CollectAggregationMetrics {
   input {
     File input_bam
     File input_bam_index
+    Boolean is_bam
     String base_name
     File ref_dict
     File ref_fasta
@@ -63,8 +64,13 @@ task CollectAggregationMetrics {
 
   Float ref_size = size(ref_fasta, "GiB") + size(ref_fasta_index, "GiB") + size(ref_dict, "GiB")
   Int disk_size = ceil(size(input_bam, "GiB") + ref_size) + 20
+  String bam_link = base_name + "." + if is_bam then "bam" else "cram"
+  String index_link = base_name + "." + if is_bam then "bam.bai" else "cram.crai" 
 
   command {
+    ln -s ~{input_bam} ~{bam_link}
+    ln -s ~{input_bam_index} ~{index_link}
+
     # These are optionally generated, but need to exist for Cromwell's sake
     touch ~{base_name}.gc_bias.detail_metrics \
       ~{base_name}.gc_bias.pdf \
@@ -74,7 +80,7 @@ task CollectAggregationMetrics {
 
     java -Xms5000m -jar /usr/picard/picard.jar \
       CollectMultipleMetrics \
-      INPUT=~{input_bam} \
+      INPUT=~{bam_link} \
       REFERENCE_SEQUENCE=~{ref_fasta} \
       OUTPUT=~{base_name} \
       ASSUME_SORTED=true \
