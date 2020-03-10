@@ -60,7 +60,7 @@ workflow WholeGenomeSingleSampleQc {
   call QC.ValidateSamFile as ValidateSamFile {
     input:
       input_bam = input_bam,
-      input_bam_index = input_bam_index,
+      input_bam_index = BuildBamIndex.bam_index,
       report_filename = base_name + ".validation_report",
       ref_dict = ref_dict,
       ref_fasta = ref_fasta,
