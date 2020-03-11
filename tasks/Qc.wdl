@@ -20,8 +20,11 @@ task LinkBamFile {
     File input_bam_index
     String base_name
     String is_bam
+    Int preemptible_tries
   }
-  
+
+  Int disk_size = ceil(size(input_bam, "GiB")) + 20  
+
   String bam_link = base_name + "." + if is_bam then "bam" else "cram"
   String index_link = base_name + "." + if is_bam then "bam.bai" else "cram.crai"
 
@@ -29,7 +32,13 @@ task LinkBamFile {
     ln -s ~{input_bam} ~{bam_link}
     ln -s ~{input_bam_index} ~{index_link}
   }
-  
+
+  runtime {
+    preemptible: preemptible_tries
+    memory: "2 GiB"
+    disks: "local-disk " + disk_size + " HDD"
+    docker: "us.gcr.io/gcp-runtimes/ubuntu_16_0_4:latest"
+  }
   output {
     File bam = "~{bam_link}"
     File bam_index = "~{index_link}"
